@@ -1,6 +1,6 @@
-export { rowValue, toggleBit, initialRow };
+export { rowValue, toggleBit, initialRow, initialState, Tick, reduceState };
 
-import { Bit, Row } from './types';
+import { Action, Bit, Row, State } from './types';
 
 const initialRow: Row = [0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -9,3 +9,22 @@ const rowValue = (row: Row): number =>
 
 const toggleBit = (index: number) => (row: Row): Row =>
   row.map((bit, i) => (i === index ? ((bit === 0 ? 1 : 0) as Bit) : bit));
+
+const initialState: State = {
+  time: 0,
+  row: initialRow,
+  targets: [],
+  exit: [],
+  objCount: 0,
+  score: 0,
+  gameOver: false,
+  paused: false,
+  powerUps: [],
+};
+
+class Tick implements Action {
+  constructor(public readonly elapsed: number) {}
+  apply = (s: State): State => ({ ...s, time: this.elapsed });
+}
+
+const reduceState = (s: State, action: Action): State => action.apply(s);
