@@ -1,4 +1,6 @@
-export { rowValue, toggleBit, initialRow, initialState, Tick, reduceState };
+export {
+  rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, reduceState,
+};
 
 import { Action, Bit, Row, State } from './types';
 
@@ -25,6 +27,11 @@ const initialState: State = {
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
   apply = (s: State): State => ({ ...s, time: this.elapsed });
+}
+
+class FlipBit implements Action {
+  constructor(public readonly index: number) {}
+  apply = (s: State): State => ({ ...s, row: toggleBit(this.index)(s.row) });
 }
 
 const reduceState = (s: State, action: Action): State => action.apply(s);
