@@ -10,6 +10,7 @@ import {
   SpawnTarget,
   Tick,
   toggleBit,
+  TogglePause,
 } from '../src/state';
 import { nextSpawnDelay, RNG, spawnValue } from '../src/rng';
 import type { Row, Target } from '../src/types';
@@ -137,6 +138,18 @@ describe('Restart', () => {
     const nextTick = new Tick(20).apply(restarted);
 
     expect(nextTick.time).toBe(20);
+  });
+});
+
+describe('TogglePause', () => {
+  it('freezes ticking and bit flips while paused', () => {
+    const paused = new TogglePause().apply(initialState);
+
+    const ticked = new Tick(1000).apply(paused);
+    const flipped = new FlipBit(0).apply(paused);
+
+    expect(ticked).toEqual(paused);
+    expect(flipped).toEqual(paused);
   });
 });
 

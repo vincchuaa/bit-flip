@@ -44,16 +44,25 @@ const removeExited = (exit: ReadonlyArray<Target>): void => {
   exit.forEach((t) => document.getElementById(targetId(t))?.remove());
 };
 
-const showGameOver = (svg: Element): void => {
-  if (document.getElementById('gameOver')) return;
+const showOverlay = (
+  svg: Element, id: string, text: string, y: number,
+): void => {
+  if (document.getElementById(id)) return;
   const el = document.createElementNS(svg.namespaceURI, 'text');
-  el.setAttribute('id', 'gameOver');
+  el.setAttribute('id', id);
   el.setAttribute('x', String(Constants.CanvasWidth / 2 - 70));
-  el.setAttribute('y', String(Constants.CanvasHeight / 2));
+  el.setAttribute('y', String(y));
   el.setAttribute('fill', 'red');
   el.setAttribute('font-size', '36');
-  el.textContent = 'Game Over';
+  el.textContent = text;
   svg.appendChild(el);
+};
+
+const toggleOverlay = (
+  svg: Element, show: boolean, id: string, text: string, y: number,
+): void => {
+  if (show) showOverlay(svg, id, text, y);
+  else document.getElementById(id)?.remove();
 };
 
 const updateView = (s: State): void => {
@@ -70,6 +79,7 @@ const updateView = (s: State): void => {
   s.targets.forEach(updateTarget(svg));
   removeExited(s.exit);
 
-  if (s.gameOver) showGameOver(svg);
-  else document.getElementById('gameOver')?.remove();
+  const midY = Constants.CanvasHeight / 2;
+  toggleOverlay(svg, s.gameOver, 'gameOver', 'Game Over', midY);
+  toggleOverlay(svg, s.paused, 'paused', 'Paused', midY - 50);
 };

@@ -1,6 +1,6 @@
 export {
   rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, SpawnTarget,
-  Restart, reduceState, fallSpeedAt,
+  Restart, TogglePause, reduceState, fallSpeedAt,
 };
 
 import { Action, Bit, Constants, Row, State, Target } from './types';
@@ -53,7 +53,7 @@ const checkMatch = (s: State): State => {
 class Tick implements Action {
   constructor(public readonly dt: number) {}
   apply = (s: State): State => {
-    if (s.gameOver) return s;
+    if (s.gameOver || s.paused) return s;
     const time = s.time + this.dt;
     const moved = s.targets.map(moveTarget(fallSpeedAt(time) * this.dt));
     const onScreen = moved.filter((t) => t.y < Constants.CanvasHeight);
@@ -75,7 +75,7 @@ class Tick implements Action {
 class SpawnTarget implements Action {
   constructor(public readonly value: number) {}
   apply = (s: State): State => {
-    if (s.gameOver) return s;
+    if (s.gameOver || s.paused) return s;
     const target: Target = {
       id: String(s.objCount),
       value: this.value,
@@ -92,11 +92,17 @@ class SpawnTarget implements Action {
 class FlipBit implements Action {
   constructor(public readonly index: number) {}
   apply = (s: State): State =>
-    s.gameOver ? s : checkMatch({ ...s, row: toggleBit(this.index)(s.row) });
+    (s.gameOver || s.paused
+      ? s
+      : checkMatch({ ...s, row: toggleBit(this.index)(s.row) }));
 }
 
 class Restart implements Action {
   apply = (s: State): State => ({ ...initialState, exit: s.targets });
+}
+
+class TogglePause implements Action {
+  apply = (s: State): State => ({ ...s, paused: !s.paused });
 }
 
 const reduceState = (s: State, action: Action): State => action.apply(s);

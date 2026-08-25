@@ -3,6 +3,7 @@ import { expand, filter, map, scan, skip } from 'rxjs/operators';
 import { Constants, Event, Key } from './types';
 import {
   FlipBit, initialState, reduceState, Restart, SpawnTarget, Tick,
+  TogglePause,
 } from './state';
 import { nextSpawnDelay, RNG, spawnValue } from './rng';
 import { updateView } from './view';
@@ -57,7 +58,9 @@ function main(): void {
     key$('keydown', 'KeyR'),
   ).pipe(map(() => new Restart()));
 
-  merge(tick$, flipKeys$, digitClicks$, spawnTarget$, restart$)
+  const pause$ = key$('keydown', 'KeyP').pipe(map(() => new TogglePause()));
+
+  merge(tick$, flipKeys$, digitClicks$, spawnTarget$, restart$, pause$)
     .pipe(scan(reduceState, initialState))
     .subscribe(updateView);
 }
