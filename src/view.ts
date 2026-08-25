@@ -60,11 +60,16 @@ const updateView = (s: State): void => {
   const readout = document.getElementById('readout');
   if (readout) readout.textContent = `time: ${s.time}`;
 
+  const score = document.getElementById('score');
+  if (score) score.textContent = `Score: ${s.score}`;
+
   const svg = document.getElementById('svgCanvas');
   if (!svg) return;
 
   s.row.forEach(updateDigit(svg));
   s.targets.forEach(updateTarget(svg));
   removeExited(s.exit);
+
   if (s.gameOver) showGameOver(svg);
+  else document.getElementById('gameOver')?.remove();
 };

@@ -6,6 +6,7 @@ import {
   reduceState,
   rowValue,
   fallSpeedAt,
+  Restart,
   SpawnTarget,
   Tick,
   toggleBit,
@@ -111,6 +112,23 @@ describe('SpawnTarget', () => {
 
     expect(result.targets).toHaveLength(1);
     expect(result.targets[0]).toMatchObject({ value: 200, y: 0 });
+  });
+});
+
+describe('Restart', () => {
+  it('resets state but keeps active targets to signal their removal', () => {
+    const target: Target = {
+      id: '0', value: 1, y: 100, spawnTime: 0, powerUp: null,
+    };
+    const state = {
+      ...initialState, targets: [target], score: 5, gameOver: true,
+    };
+
+    const result = new Restart().apply(state);
+
+    expect(result.score).toBe(0);
+    expect(result.targets).toHaveLength(0);
+    expect(result.exit).toEqual([target]);
   });
 });
 

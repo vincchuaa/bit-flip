@@ -1,6 +1,6 @@
 export {
   rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, SpawnTarget,
-  reduceState, fallSpeedAt,
+  Restart, reduceState, fallSpeedAt,
 };
 
 import { Action, Bit, Constants, Row, State, Target } from './types';
@@ -93,6 +93,10 @@ class FlipBit implements Action {
   constructor(public readonly index: number) {}
   apply = (s: State): State =>
     s.gameOver ? s : checkMatch({ ...s, row: toggleBit(this.index)(s.row) });
+}
+
+class Restart implements Action {
+  apply = (s: State): State => ({ ...initialState, exit: s.targets });
 }
 
 const reduceState = (s: State, action: Action): State => action.apply(s);
