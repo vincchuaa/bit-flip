@@ -1,6 +1,6 @@
 export {
   rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, SpawnTarget,
-  reduceState,
+  reduceState, fallSpeedAt,
 };
 
 import { Action, Bit, Constants, Row, State, Target } from './types';
@@ -29,6 +29,10 @@ const moveTarget = (dy: number) => (t: Target): Target => ({
   ...t, y: t.y + dy,
 });
 
+// speed rises the longer the player survives
+const fallSpeedAt = (elapsedMs: number): number =>
+  Constants.InitialFallSpeed + Math.floor(elapsedMs / 15000) * 0.01;
+
 // closest target to the check line, since that's the only one being played
 const lowestTarget = (ts: ReadonlyArray<Target>): Target | undefined =>
   ts.reduce<Target | undefined>(
@@ -51,7 +55,7 @@ class Tick implements Action {
   apply = (s: State): State => {
     if (s.gameOver) return s;
     const dt = this.elapsed - s.time;
-    const moved = s.targets.map(moveTarget(Constants.InitialFallSpeed * dt));
+    const moved = s.targets.map(moveTarget(fallSpeedAt(this.elapsed) * dt));
     const onScreen = moved.filter((t) => t.y < Constants.CanvasHeight);
     const offScreen = moved.filter((t) => t.y >= Constants.CanvasHeight);
     const lowest = lowestTarget(onScreen);

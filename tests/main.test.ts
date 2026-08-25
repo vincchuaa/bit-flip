@@ -5,6 +5,7 @@ import {
   initialState,
   reduceState,
   rowValue,
+  fallSpeedAt,
   SpawnTarget,
   Tick,
   toggleBit,
@@ -95,6 +96,12 @@ describe('FlipBit', () => {
 
     expect(result.targets).toHaveLength(0);
     expect(result.score).toBe(1);
+  });
+});
+
+describe('fallSpeedAt', () => {
+  it('increases the longer the player survives', () => {
+    expect(fallSpeedAt(20000)).toBeGreaterThan(fallSpeedAt(0));
   });
 });
 
