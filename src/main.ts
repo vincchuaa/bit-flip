@@ -1,3 +1,4 @@
+// wires up the observable streams that drive the game
 import { fromEvent, interval, merge, of, timer } from 'rxjs';
 import { expand, filter, map, scan, skip } from 'rxjs/operators';
 import { Constants, Event, Key } from './types';
@@ -38,9 +39,9 @@ function main(): void {
   );
 
   const digitClicks$ = fromEvent<MouseEvent>(svg, 'click').pipe(
-    map((e) => (e.target as Element).id),
-    filter((id) => id.startsWith('digit')),
-    map((id) => new FlipBit(Number(id.slice(5)))),
+    map((e) => (e.target as Element).closest('[data-digit]')),
+    filter((el): el is Element => el !== null),
+    map((el) => new FlipBit(Number(el.getAttribute('data-digit')))),
   );
 
   const spawnTiming$ = of<SpawnSeed>({ seed: 987654321, delay: 0 }).pipe(

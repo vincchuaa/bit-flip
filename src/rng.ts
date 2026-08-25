@@ -1,3 +1,4 @@
+// pure random number generation for target values and spawn timing
 export { RNG, spawnValue, nextSpawnDelay, spawnPowerUp };
 
 import { PowerUpKind } from './types';

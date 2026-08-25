@@ -3,28 +3,177 @@
 <head>
   <title>Flippy Bit</title>
   <style>
+    :root {
+      --bg: #0f1117;
+      --panel: #171a23;
+      --panel-light: #232838;
+      --border: #2a2f3a;
+      --accent: #4fd1c5;
+      --danger: #ff5d5d;
+      --text: #e6e6e6;
+      --muted: #8a8f98;
+    }
+
     body {
-      font-family: monospace;
-      background-color: #111;
-      color: #eee;
+      font-family: 'Courier New', monospace;
+      background-color: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 24px;
+    }
+
+    .game {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+
+    svg {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #000;
+    }
+
+    .check-line {
+      stroke: var(--danger);
+      stroke-width: 2;
+      stroke-dasharray: 6 4;
+      opacity: 0.8;
+    }
+
+    .digit-cell-bg {
+      fill: var(--panel-light);
+      stroke: var(--border);
+    }
+
+    .digit-cell-bg.on {
+      fill: var(--accent);
+      stroke: var(--accent);
+    }
+
+    .digit-cell-text {
+      fill: var(--text);
+      font-size: 26px;
+      font-family: 'Courier New', monospace;
+      text-anchor: middle;
+    }
+
+    .target-cell-bg {
+      fill: #3a3320;
+      stroke: #6b5b1f;
+    }
+
+    .target-cell-bg.power {
+      fill: #1f3a3a;
+      stroke: var(--accent);
+    }
+
+    .target-cell-text {
+      fill: #f6d365;
+      font-family: 'Courier New', monospace;
+      text-anchor: middle;
+    }
+
+    .target-cell-text.power {
+      fill: var(--accent);
+    }
+
+    .overlay-text {
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      text-anchor: middle;
+    }
+
+    .overlay-text.danger {
+      fill: var(--danger);
+    }
+
+    .overlay-text.info {
+      fill: var(--accent);
+    }
+
+    .status {
+      text-align: center;
+    }
+
+    .status .score {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .status .power-ups {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 16px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      font-family: 'Courier New', monospace;
+      background-color: var(--panel-light);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .readout {
+      font-size: 11px;
+      color: var(--muted);
     }
   </style>
 </head>
 
 <body>
   <script type="module" src="./src/main.ts"></script>
-  <svg id="svgCanvas" width="400" height="600" style="background-color:black">
-    <line x1="0" y1="520" x2="400" y2="520" stroke="red" stroke-width="2" />
-  </svg>
-  <div id="score"></div>
-  <div id="powerUps"></div>
-  <button id="restartBtn">Restart</button>
-  <button id="pauseBtn">Pause</button>
-  <button id="baseBtn">Base 2</button>
-  <div id="readout"></div>
+  <div class="game">
+    <h1>FLIPPY BIT</h1>
+    <svg id="svgCanvas" width="400" height="600">
+      <line class="check-line" x1="0" y1="520" x2="400" y2="520" />
+    </svg>
+    <div class="status">
+      <div id="score" class="score"></div>
+      <div id="powerUps" class="power-ups"></div>
+    </div>
+    <div class="controls">
+      <button id="restartBtn">Restart</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="baseBtn">Base 2</button>
+    </div>
+    <p class="hint">Press 1-8 or click a cell below the line to flip a bit</p>
+    <div id="readout" class="readout"></div>
+  </div>
 </body>
 
 </html>

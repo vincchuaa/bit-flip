@@ -1,3 +1,4 @@
+// shared types and tuning constants for the game
 export { Constants };
 export type {
   Bit, Row, PowerUpKind, Target, ActivePowerUp, State, Action, Key, Event,
@@ -18,7 +19,6 @@ type Row = ReadonlyArray<Bit>;
 
 type PowerUpKind = 'bonus' | 'speedUp' | 'slowDown' | 'clearBoard';
 
-// falling target
 type Target = Readonly<{
   id: string,
   value: number,
@@ -27,14 +27,12 @@ type Target = Readonly<{
   powerUp: PowerUpKind | null,
 }>;
 
-// power-up in effect
 type ActivePowerUp = Readonly<{
   kind: PowerUpKind,
   activatedAt: number,
   expiresAt: number,
 }>;
 
-// game state
 type State = Readonly<{
   time: number,
   row: Row,
@@ -52,7 +50,6 @@ interface Action {
   apply(s: State): State;
 }
 
-// Keys used for game control.
 type Key =
   | 'Digit1' | 'Digit2' | 'Digit3' | 'Digit4'
   | 'Digit5' | 'Digit6' | 'Digit7' | 'Digit8'

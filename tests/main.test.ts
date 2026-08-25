@@ -1,3 +1,4 @@
+// tests for the pure game logic in state.ts and rng.ts
 import { describe, expect, it } from 'vitest';
 import {
   bonusScore,

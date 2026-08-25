@@ -1,3 +1,4 @@
+// game state, actions, and pure state-transition logic
 export {
   rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, SpawnTarget,
   Restart, TogglePause, ToggleBase, reduceState, fallSpeedAt, decayPowerUps,
@@ -33,7 +34,6 @@ const moveTarget = (dy: number) => (t: Target): Target => ({
   ...t, y: t.y + dy,
 });
 
-// speed rises the longer the player survives
 const fallSpeedAt = (elapsedMs: number): number =>
   Constants.InitialFallSpeed + Math.floor(elapsedMs / 15000) * 0.01;
 
