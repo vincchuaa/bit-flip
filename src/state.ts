@@ -1,5 +1,6 @@
 export {
-  rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, reduceState,
+  rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, SpawnTarget,
+  reduceState,
 };
 
 import { Action, Bit, Constants, Row, State, Target } from './types';
@@ -24,10 +25,6 @@ const initialState: State = {
   powerUps: [],
 };
 
-// minimum-game target sequence; replaced by random values in a later phase
-const hardcodedTargetValues: ReadonlyArray<number> = [26, 255, 15, 128, 51];
-const SpawnIntervalMs = 3000;
-
 const moveTarget = (dy: number) => (t: Target): Target => ({
   ...t, y: t.y + dy,
 });
@@ -36,18 +33,6 @@ const moveTarget = (dy: number) => (t: Target): Target => ({
 const lowestTarget = (ts: ReadonlyArray<Target>): Target | undefined =>
   ts.reduce<Target | undefined>(
     (lo, t) => (!lo || t.y > lo.y ? t : lo), undefined);
-
-const spawnDueTargets = (s: State, elapsed: number): ReadonlyArray<Target> => {
-  const due = Math.min(
-    hardcodedTargetValues.length, Math.floor(elapsed / SpawnIntervalMs) + 1);
-  return hardcodedTargetValues.slice(s.objCount, due).map((value, k) => ({
-    id: String(s.objCount + k),
-    value,
-    y: 0,
-    spawnTime: elapsed,
-    powerUp: null,
-  }));
-};
 
 const checkMatch = (s: State): State => {
   const target = lowestTarget(s.targets);
@@ -69,7 +54,6 @@ class Tick implements Action {
     const moved = s.targets.map(moveTarget(Constants.InitialFallSpeed * dt));
     const onScreen = moved.filter((t) => t.y < Constants.CanvasHeight);
     const offScreen = moved.filter((t) => t.y >= Constants.CanvasHeight);
-    const spawned = spawnDueTargets(s, this.elapsed);
     const lowest = lowestTarget(onScreen);
     const lost = lowest !== undefined
       && lowest.y >= Constants.CheckLineY
@@ -77,10 +61,26 @@ class Tick implements Action {
     return {
       ...s,
       time: this.elapsed,
-      targets: onScreen.concat(spawned),
+      targets: onScreen,
       exit: offScreen,
-      objCount: s.objCount + spawned.length,
       gameOver: lost,
+    };
+  };
+}
+
+class SpawnTarget implements Action {
+  constructor(public readonly value: number) {}
+  apply = (s: State): State => {
+    if (s.gameOver) return s;
+    const target: Target = {
+      id: String(s.objCount),
+      value: this.value,
+      y: 0,
+      spawnTime: s.time,
+      powerUp: null,
+    };
+    return {
+      ...s, targets: s.targets.concat(target), objCount: s.objCount + 1,
     };
   };
 }

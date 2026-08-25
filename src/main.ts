@@ -1,7 +1,10 @@
-import { fromEvent, interval, merge } from 'rxjs';
-import { filter, map, scan } from 'rxjs/operators';
+import { fromEvent, interval, merge, of, timer } from 'rxjs';
+import { expand, filter, map, scan, skip } from 'rxjs/operators';
 import { Constants, Event, Key } from './types';
-import { FlipBit, initialState, reduceState, Tick } from './state';
+import {
+  FlipBit, initialState, reduceState, SpawnTarget, Tick,
+} from './state';
+import { nextSpawnDelay, RNG, spawnValue } from './rng';
 import { updateView } from './view';
 
 const bitKeys: ReadonlyArray<Key> = [
@@ -15,7 +18,16 @@ const key$ = (e: Event, k: Key) =>
     filter(({ repeat }) => !repeat),
   );
 
+type SpawnSeed = Readonly<{ seed: number, delay: number }>;
+
+const nextSpawnSeed = (s: SpawnSeed): SpawnSeed => {
+  const seed = RNG.hash(s.seed);
+  return { seed, delay: nextSpawnDelay(seed) };
+};
+
 function main(): void {
+  const svg = document.getElementById('svgCanvas')!;
+
   const tick$ = interval(Constants.FrameRate)
     .pipe(map((count) => new Tick(count * Constants.FrameRate)));
 
@@ -24,7 +36,22 @@ function main(): void {
       key$('keydown', code).pipe(map(() => new FlipBit(i)))),
   );
 
-  merge(tick$, flipKeys$)
+  const digitClicks$ = fromEvent<MouseEvent>(svg, 'click').pipe(
+    map((e) => (e.target as Element).id),
+    filter((id) => id.startsWith('digit')),
+    map((id) => new FlipBit(Number(id.slice(5)))),
+  );
+
+  const spawnTiming$ = of<SpawnSeed>({ seed: 987654321, delay: 0 }).pipe(
+    expand((s) => timer(nextSpawnSeed(s).delay)
+      .pipe(map(() => nextSpawnSeed(s)))),
+    skip(1),
+  );
+  const spawnTarget$ = spawnTiming$.pipe(
+    map(({ seed }) => new SpawnTarget(spawnValue(seed))),
+  );
+
+  merge(tick$, flipKeys$, digitClicks$, spawnTarget$)
     .pipe(scan(reduceState, initialState))
     .subscribe(updateView);
 }

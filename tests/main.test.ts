@@ -5,9 +5,11 @@ import {
   initialState,
   reduceState,
   rowValue,
+  SpawnTarget,
   Tick,
   toggleBit,
 } from '../src/state';
+import { nextSpawnDelay, RNG, spawnValue } from '../src/rng';
 import type { Row, Target } from '../src/types';
 
 describe('rowValue', () => {
@@ -51,12 +53,6 @@ describe('toggleBit', () => {
 });
 
 describe('Tick', () => {
-  it('spawns the first target near the start of the game', () => {
-    const result = new Tick(0).apply(initialState);
-
-    expect(result.targets).toHaveLength(1);
-  });
-
   it('moves existing targets downward', () => {
     const target: Target = {
       id: '0', value: 26, y: 0, spawnTime: 0, powerUp: null,
@@ -102,10 +98,39 @@ describe('FlipBit', () => {
   });
 });
 
+describe('SpawnTarget', () => {
+  it('adds a target with the given value at the top of the screen', () => {
+    const result = new SpawnTarget(200).apply(initialState);
+
+    expect(result.targets).toHaveLength(1);
+    expect(result.targets[0]).toMatchObject({ value: 200, y: 0 });
+  });
+});
+
 describe('reduceState', () => {
   it('applies the action to the state', () => {
     const result = reduceState(initialState, new Tick(42));
 
     expect(result.time).toBe(42);
+  });
+});
+
+describe('RNG', () => {
+  it('hash is deterministic for the same seed', () => {
+    expect(RNG.hash(123)).toBe(RNG.hash(123));
+  });
+
+  it('spawnValue stays within 0-255', () => {
+    const value = spawnValue(RNG.hash(123));
+
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(value).toBeLessThanOrEqual(255);
+  });
+
+  it('nextSpawnDelay stays within 1000-3000ms', () => {
+    const delay = nextSpawnDelay(RNG.hash(123));
+
+    expect(delay).toBeGreaterThanOrEqual(1000);
+    expect(delay).toBeLessThanOrEqual(3000);
   });
 });
