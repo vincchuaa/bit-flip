@@ -51,11 +51,11 @@ const checkMatch = (s: State): State => {
 };
 
 class Tick implements Action {
-  constructor(public readonly elapsed: number) {}
+  constructor(public readonly dt: number) {}
   apply = (s: State): State => {
     if (s.gameOver) return s;
-    const dt = this.elapsed - s.time;
-    const moved = s.targets.map(moveTarget(fallSpeedAt(this.elapsed) * dt));
+    const time = s.time + this.dt;
+    const moved = s.targets.map(moveTarget(fallSpeedAt(time) * this.dt));
     const onScreen = moved.filter((t) => t.y < Constants.CanvasHeight);
     const offScreen = moved.filter((t) => t.y >= Constants.CanvasHeight);
     const lowest = lowestTarget(onScreen);
@@ -64,7 +64,7 @@ class Tick implements Action {
       && rowValue(s.row) !== lowest.value;
     return {
       ...s,
-      time: this.elapsed,
+      time,
       targets: onScreen,
       exit: offScreen,
       gameOver: lost,

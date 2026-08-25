@@ -130,6 +130,14 @@ describe('Restart', () => {
     expect(result.targets).toHaveLength(0);
     expect(result.exit).toEqual([target]);
   });
+
+  it('does not carry elapsed time across a restart', () => {
+    const later = new Tick(5000).apply(initialState);
+    const restarted = new Restart().apply(later);
+    const nextTick = new Tick(20).apply(restarted);
+
+    expect(nextTick.time).toBe(20);
+  });
 });
 
 describe('reduceState', () => {

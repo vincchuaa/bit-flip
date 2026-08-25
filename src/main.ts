@@ -29,7 +29,7 @@ function main(): void {
   const svg = document.getElementById('svgCanvas')!;
 
   const tick$ = interval(Constants.FrameRate)
-    .pipe(map((count) => new Tick(count * Constants.FrameRate)));
+    .pipe(map(() => new Tick(Constants.FrameRate)));
 
   const flipKeys$ = merge(
     ...bitKeys.map((code, i) =>
