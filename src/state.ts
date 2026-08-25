@@ -99,17 +99,22 @@ class Tick implements Action {
     const onScreen = moved.filter((t) => t.y < Constants.CanvasHeight);
     const offScreen = moved.filter((t) => t.y >= Constants.CanvasHeight);
     const lowest = lowestTarget(onScreen);
-    const lost = lowest !== undefined
+    const reachedCheckLine = lowest !== undefined
       && lowest.y >= Constants.CheckLineY
       && rowValue(s.row) !== lowest.value;
-    return {
+    const nextState = {
       ...s,
       time,
       targets: onScreen,
       exit: offScreen,
-      gameOver: lost,
       powerUps,
     };
+
+    if (reachedCheckLine) return { ...nextState, gameOver: true };
+
+    return lowest !== undefined && lowest.y >= Constants.CheckLineY
+      ? checkMatch(nextState)
+      : nextState;
   };
 }
 

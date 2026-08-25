@@ -83,6 +83,20 @@ describe('Tick', () => {
     expect(result.gameOver).toBe(true);
   });
 
+  it('scores when a matching target reaches the check line', () => {
+    const target: Target = {
+      id: '0', value: 0, y: 550, spawnTime: 0, powerUp: null,
+    };
+    const state = { ...initialState, targets: [target], objCount: 1 };
+
+    const result = new Tick(20).apply(state);
+
+    expect(result.gameOver).toBe(false);
+    expect(result.targets).toHaveLength(0);
+    expect(result.score).toBe(1);
+    expect(result.exit[0]).toMatchObject({ id: target.id, value: 0 });
+  });
+
   it('does not mutate the input state', () => {
     const before = { ...initialState };
 
