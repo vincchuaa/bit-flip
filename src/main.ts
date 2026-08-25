@@ -16,7 +16,8 @@ const key$ = (e: Event, k: Key) =>
   );
 
 function main(): void {
-  const tick$ = interval(Constants.FrameRate).pipe(map((e) => new Tick(e)));
+  const tick$ = interval(Constants.FrameRate)
+    .pipe(map((count) => new Tick(count * Constants.FrameRate)));
 
   const flipKeys$ = merge(
     ...bitKeys.map((code, i) =>
