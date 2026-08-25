@@ -1,9 +1,12 @@
 export {
   rowValue, toggleBit, initialRow, initialState, Tick, FlipBit, SpawnTarget,
-  Restart, TogglePause, reduceState, fallSpeedAt,
+  Restart, TogglePause, ToggleBase, reduceState, fallSpeedAt, decayPowerUps,
+  speedMultiplier, bonusScore,
 };
 
-import { Action, Bit, Constants, Row, State, Target } from './types';
+import {
+  Action, ActivePowerUp, Bit, Constants, PowerUpKind, Row, State, Target,
+} from './types';
 
 const initialRow: Row = [0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -23,6 +26,7 @@ const initialState: State = {
   gameOver: false,
   paused: false,
   powerUps: [],
+  base: 16,
 };
 
 const moveTarget = (dy: number) => (t: Target): Target => ({
@@ -38,15 +42,49 @@ const lowestTarget = (ts: ReadonlyArray<Target>): Target | undefined =>
   ts.reduce<Target | undefined>(
     (lo, t) => (!lo || t.y > lo.y ? t : lo), undefined);
 
+const activatePowerUp = (kind: PowerUpKind, now: number): ActivePowerUp => ({
+  kind, activatedAt: now, expiresAt: now + Constants.PowerUpDurationMs,
+});
+
+const decayPowerUps = (
+  ps: ReadonlyArray<ActivePowerUp>, now: number,
+): ReadonlyArray<ActivePowerUp> => ps.filter((p) => p.expiresAt > now);
+
+const speedMultiplier = (ps: ReadonlyArray<ActivePowerUp>): number =>
+  ps.reduce((m, p) => {
+    if (p.kind === 'speedUp') return m * 1.5;
+    if (p.kind === 'slowDown') return m * 0.5;
+    return m;
+  }, 1);
+
+const bonusScore = (ps: ReadonlyArray<ActivePowerUp>): number =>
+  (ps.some((p) => p.kind === 'bonus') ? 3 : 1);
+
 const checkMatch = (s: State): State => {
   const target = lowestTarget(s.targets);
   if (!target || rowValue(s.row) !== target.value) return s;
+
+  if (target.powerUp === 'clearBoard') {
+    return {
+      ...s,
+      targets: [],
+      exit: s.exit.concat(s.targets),
+      score: s.score + bonusScore(s.powerUps),
+      row: initialRow,
+    };
+  }
+
+  const powerUps = target.powerUp
+    ? s.powerUps.concat(activatePowerUp(target.powerUp, s.time))
+    : s.powerUps;
+
   return {
     ...s,
     targets: s.targets.filter((t) => t.id !== target.id),
     exit: s.exit.concat(target),
-    score: s.score + 1,
+    score: s.score + bonusScore(s.powerUps),
     row: initialRow,
+    powerUps,
   };
 };
 
@@ -55,7 +93,9 @@ class Tick implements Action {
   apply = (s: State): State => {
     if (s.gameOver || s.paused) return s;
     const time = s.time + this.dt;
-    const moved = s.targets.map(moveTarget(fallSpeedAt(time) * this.dt));
+    const powerUps = decayPowerUps(s.powerUps, time);
+    const speed = fallSpeedAt(time) * speedMultiplier(powerUps);
+    const moved = s.targets.map(moveTarget(speed * this.dt));
     const onScreen = moved.filter((t) => t.y < Constants.CanvasHeight);
     const offScreen = moved.filter((t) => t.y >= Constants.CanvasHeight);
     const lowest = lowestTarget(onScreen);
@@ -68,12 +108,16 @@ class Tick implements Action {
       targets: onScreen,
       exit: offScreen,
       gameOver: lost,
+      powerUps,
     };
   };
 }
 
 class SpawnTarget implements Action {
-  constructor(public readonly value: number) {}
+  constructor(
+    public readonly value: number,
+    public readonly powerUp: PowerUpKind | null = null,
+  ) {}
   apply = (s: State): State => {
     if (s.gameOver || s.paused) return s;
     const target: Target = {
@@ -81,7 +125,7 @@ class SpawnTarget implements Action {
       value: this.value,
       y: 0,
       spawnTime: s.time,
-      powerUp: null,
+      powerUp: this.powerUp,
     };
     return {
       ...s, targets: s.targets.concat(target), objCount: s.objCount + 1,
@@ -103,6 +147,10 @@ class Restart implements Action {
 
 class TogglePause implements Action {
   apply = (s: State): State => ({ ...s, paused: !s.paused });
+}
+
+class ToggleBase implements Action {
+  apply = (s: State): State => ({ ...s, base: s.base === 16 ? 2 : 16 });
 }
 
 const reduceState = (s: State, action: Action): State => action.apply(s);

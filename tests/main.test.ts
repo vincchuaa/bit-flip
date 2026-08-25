@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bonusScore,
+  decayPowerUps,
   FlipBit,
   initialRow,
   initialState,
@@ -7,13 +9,15 @@ import {
   rowValue,
   fallSpeedAt,
   Restart,
+  speedMultiplier,
   SpawnTarget,
   Tick,
   toggleBit,
+  ToggleBase,
   TogglePause,
 } from '../src/state';
 import { nextSpawnDelay, RNG, spawnValue } from '../src/rng';
-import type { Row, Target } from '../src/types';
+import type { ActivePowerUp, Row, Target } from '../src/types';
 
 describe('rowValue', () => {
   it('returns 0 for an all-zero row', () => {
@@ -150,6 +154,88 @@ describe('TogglePause', () => {
 
     expect(ticked).toEqual(paused);
     expect(flipped).toEqual(paused);
+  });
+});
+
+describe('decayPowerUps', () => {
+  it('keeps only power-ups that have not expired yet', () => {
+    const active: ActivePowerUp = {
+      kind: 'speedUp', activatedAt: 0, expiresAt: 5000,
+    };
+    const expired: ActivePowerUp = {
+      kind: 'bonus', activatedAt: 0, expiresAt: 1000,
+    };
+
+    const result = decayPowerUps([active, expired], 2000);
+
+    expect(result).toEqual([active]);
+  });
+});
+
+describe('speedMultiplier', () => {
+  it('speeds up when speedUp is active, slows down when slowDown is', () => {
+    const speedUp: ActivePowerUp = {
+      kind: 'speedUp', activatedAt: 0, expiresAt: 5000,
+    };
+    const slowDown: ActivePowerUp = {
+      kind: 'slowDown', activatedAt: 0, expiresAt: 5000,
+    };
+
+    expect(speedMultiplier([speedUp])).toBeGreaterThan(1);
+    expect(speedMultiplier([slowDown])).toBeLessThan(1);
+    expect(speedMultiplier([])).toBe(1);
+  });
+});
+
+describe('bonusScore', () => {
+  it('awards 3 points with an active bonus, otherwise 1', () => {
+    const bonus: ActivePowerUp = {
+      kind: 'bonus', activatedAt: 0, expiresAt: 5000,
+    };
+
+    expect(bonusScore([bonus])).toBe(3);
+    expect(bonusScore([])).toBe(1);
+  });
+});
+
+describe('power-up targets', () => {
+  it('activates a power-up on match instead of removing it silently', () => {
+    const target: Target = {
+      id: '0', value: 1, y: 0, spawnTime: 0, powerUp: 'speedUp',
+    };
+    const state = { ...initialState, targets: [target], objCount: 1 };
+
+    const result = new FlipBit(7).apply(state);
+
+    expect(result.powerUps).toHaveLength(1);
+    expect(result.powerUps[0].kind).toBe('speedUp');
+  });
+
+  it('clears every target on the screen when clearBoard is matched', () => {
+    const cleared: Target = {
+      id: '0', value: 1, y: 50, spawnTime: 0, powerUp: 'clearBoard',
+    };
+    const other: Target = {
+      id: '1', value: 200, y: 0, spawnTime: 0, powerUp: null,
+    };
+    const state = {
+      ...initialState, targets: [cleared, other], objCount: 2,
+    };
+
+    const result = new FlipBit(7).apply(state);
+
+    expect(result.targets).toHaveLength(0);
+    expect(result.exit).toEqual([cleared, other]);
+  });
+});
+
+describe('ToggleBase', () => {
+  it('switches between base 16 and base 2', () => {
+    const toBase2 = new ToggleBase().apply(initialState);
+    const toBase16 = new ToggleBase().apply(toBase2);
+
+    expect(toBase2.base).toBe(2);
+    expect(toBase16.base).toBe(16);
   });
 });
 

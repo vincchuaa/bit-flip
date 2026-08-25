@@ -45,6 +45,7 @@ type State = Readonly<{
   gameOver: boolean,
   paused: boolean,
   powerUps: ReadonlyArray<ActivePowerUp>,
+  base: number,
 }>;
 
 interface Action {

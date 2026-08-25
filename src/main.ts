@@ -3,9 +3,9 @@ import { expand, filter, map, scan, skip } from 'rxjs/operators';
 import { Constants, Event, Key } from './types';
 import {
   FlipBit, initialState, reduceState, Restart, SpawnTarget, Tick,
-  TogglePause,
+  ToggleBase, TogglePause,
 } from './state';
-import { nextSpawnDelay, RNG, spawnValue } from './rng';
+import { nextSpawnDelay, RNG, spawnPowerUp, spawnValue } from './rng';
 import { updateView } from './view';
 
 const bitKeys: ReadonlyArray<Key> = [
@@ -49,7 +49,7 @@ function main(): void {
     skip(1),
   );
   const spawnTarget$ = spawnTiming$.pipe(
-    map(({ seed }) => new SpawnTarget(spawnValue(seed))),
+    map(({ seed }) => new SpawnTarget(spawnValue(seed), spawnPowerUp(seed))),
   );
 
   const restartBtn = document.getElementById('restartBtn')!;
@@ -58,9 +58,18 @@ function main(): void {
     key$('keydown', 'KeyR'),
   ).pipe(map(() => new Restart()));
 
-  const pause$ = key$('keydown', 'KeyP').pipe(map(() => new TogglePause()));
+  const pauseBtn = document.getElementById('pauseBtn')!;
+  const pause$ = merge(
+    fromEvent(pauseBtn, 'click'),
+    key$('keydown', 'KeyP'),
+  ).pipe(map(() => new TogglePause()));
 
-  merge(tick$, flipKeys$, digitClicks$, spawnTarget$, restart$, pause$)
+  const baseBtn = document.getElementById('baseBtn')!;
+  const base$ = fromEvent(baseBtn, 'click').pipe(map(() => new ToggleBase()));
+
+  merge(
+    tick$, flipKeys$, digitClicks$, spawnTarget$, restart$, pause$, base$,
+  )
     .pipe(scan(reduceState, initialState))
     .subscribe(updateView);
 }

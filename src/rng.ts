@@ -1,4 +1,6 @@
-export { RNG, spawnValue, nextSpawnDelay };
+export { RNG, spawnValue, nextSpawnDelay, spawnPowerUp };
+
+import { PowerUpKind } from './types';
 
 abstract class RNG {
   private static m = 0x80000000;
@@ -16,3 +18,13 @@ const spawnValue = (seed: number): number =>
 // maps a hash to a spawn delay in 1000-3000ms
 const nextSpawnDelay = (seed: number): number =>
   1000 + ((RNG.scale(seed) + 1) / 2) * 2000;
+
+const powerUpKinds: ReadonlyArray<PowerUpKind> =
+  ['bonus', 'speedUp', 'slowDown', 'clearBoard'];
+
+// most spawns carry no power-up; 20% chance of one, evenly split by kind
+const spawnPowerUp = (seed: number): PowerUpKind | null => {
+  const u = (RNG.scale(seed) + 1) / 2;
+  if (u >= 0.2) return null;
+  return powerUpKinds[Math.floor((u / 0.2) * powerUpKinds.length)];
+};
